@@ -20,7 +20,10 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(
-                request -> request.anyRequest().permitAll()
+                request -> request
+                        .requestMatchers("/api/register", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/api/me", "/api/logout").authenticated()
+                        .anyRequest().permitAll()
         );
 
         return http.build();
