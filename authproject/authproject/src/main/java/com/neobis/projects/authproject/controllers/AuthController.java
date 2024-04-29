@@ -1,6 +1,7 @@
 package com.neobis.projects.authproject.controllers;
 
 
+import com.neobis.projects.authproject.dto.UserLoginDTO;
 import com.neobis.projects.authproject.dto.UserRegistrationDTO;
 import com.neobis.projects.authproject.services.RegistrationService;
 import com.neobis.projects.authproject.services.UserService;
@@ -10,6 +11,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,6 +25,9 @@ public class AuthController {
 
     private final UserService userService;
     private final RegistrationService registrationService;
+    private final AuthenticationProvider authenticationProvider;
+
+
     // Endpoint for registration: /api/register
     @PostMapping("/register")
     @Operation(summary = "User registration", description = "Endpoint for user registration. Returns jwt token.")
@@ -32,7 +40,16 @@ public class AuthController {
     // Endpoint for login: /api/login
     @PostMapping("/login")
     @Operation(summary = "User login", description = "Endpoint for user login. Returns jwt token.")
-    public ResponseEntity<String> login() {
+    public ResponseEntity<String> login(@RequestBody UserLoginDTO userLoginDTO) {
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userLoginDTO.getUsername(),
+                userLoginDTO.getPassword());
+        try{
+            authenticationProvider.authenticate(authentication);
+        }catch (BadCredentialsException ex) {
+            return new ResponseEntity<>("Bad credentials...", HttpStatus.BAD_REQUEST);
+        }
+
+
         return new ResponseEntity<>("Login...", HttpStatus.OK);
     }
 
