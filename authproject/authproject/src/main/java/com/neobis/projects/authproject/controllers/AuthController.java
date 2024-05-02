@@ -5,6 +5,7 @@ import com.neobis.projects.authproject.dto.UserErrorResponse;
 import com.neobis.projects.authproject.dto.UserLoginDTO;
 import com.neobis.projects.authproject.dto.UserRegistrationDTO;
 import com.neobis.projects.authproject.entities.User;
+import com.neobis.projects.authproject.entities.UserStatus;
 import com.neobis.projects.authproject.services.RegistrationService;
 import com.neobis.projects.authproject.services.UserService;
 import com.neobis.projects.authproject.security.JwtTokenUtils;
@@ -90,9 +91,16 @@ public class AuthController {
     @SecurityRequirement(name = "JWT")
     @Operation(summary = "Home page", description = "Home page is available after registration.")
     public ResponseEntity<?> homePage(Principal principal) {
-//        Authentication currentUser = SecurityContextHolder.getContext().getAuthentication();
-//        String username = currentUser.getName();
-        return new ResponseEntity<>(Map.of("username", principal.getName()), HttpStatus.OK);
+        User user = userService.findByUsername(principal.getName()).get();
+        if(user.getUserStatus().equals(UserStatus.FIRST_TIME)) {
+            userService.setUserStatus(user, UserStatus.NOT_FIRST_TIME);
+            return new ResponseEntity<>(Map.of("username", user.getUsername(),
+                        "userStatus", "First time"), HttpStatus.OK);
+        }
+        else {
+            return new ResponseEntity<>(Map.of("username", user.getUsername(),
+                    "userStatus", "Not first time"), HttpStatus.OK);
+        }
     }
 
     // Endpoint for logout

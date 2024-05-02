@@ -3,6 +3,7 @@ package com.neobis.projects.authproject.services;
 import com.neobis.projects.authproject.dto.UserRegistrationDTO;
 import com.neobis.projects.authproject.entities.MyUserDetails;
 import com.neobis.projects.authproject.entities.User;
+import com.neobis.projects.authproject.entities.UserStatus;
 import com.neobis.projects.authproject.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -40,5 +41,12 @@ public class UserService implements UserDetailsService {
 
     public Optional<User> findByEmail(String email) {
         return userRepository.findUserByEmail(email);
+    }
+
+    @Transactional
+    public void setUserStatus(User user, UserStatus userStatus) {
+        User userToBeUpdated = userRepository.findUserByUsername(user.getUsername()).get();
+        userToBeUpdated.setUserStatus(userStatus);
+        userRepository.save(userToBeUpdated);
     }
 }
