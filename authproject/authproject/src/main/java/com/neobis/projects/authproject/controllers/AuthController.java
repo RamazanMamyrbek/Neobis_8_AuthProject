@@ -80,6 +80,7 @@ public class AuthController {
         }
         SecurityContextHolder.getContext().setAuthentication(authentication);
         UserDetails userDetails = userService.loadUserByUsername(userLoginDTO.getUsername());
+        userService.loginUser(userLoginDTO.getUsername());
         String token = jwtTokenUtils.generateToken(userDetails);
 
 
@@ -92,7 +93,7 @@ public class AuthController {
     @Operation(summary = "Home page", description = "Home page is available after registration.")
     public ResponseEntity<?> homePage(Principal principal) {
         User user = userService.findByUsername(principal.getName()).get();
-        if(user.getUserStatus().equals(UserStatus.FIRST_TIME)) {
+        if(user.getIsFirstTime().equals(UserStatus.FIRST_TIME)) {
             userService.setUserStatus(user, UserStatus.NOT_FIRST_TIME);
             return new ResponseEntity<>(Map.of("username", user.getUsername(),
                         "userStatus", "First time"), HttpStatus.OK);
@@ -107,8 +108,9 @@ public class AuthController {
     @GetMapping("/logout")
     @SecurityRequirement(name = "JWT")
     @Operation(summary = "User logout", description = "Endpoint for user logout.")
-    public ResponseEntity<String> logout() {
-        return new ResponseEntity<>("Logout...", HttpStatus.OK);
+    public ResponseEntity<?> logout(Principal principal) {
+        userService.logoutUser(principal.getName());
+        return new ResponseEntity<>(Map.of("message", String.format("User %s is logged out", principal.getName())), HttpStatus.OK);
     }
 
     @ExceptionHandler

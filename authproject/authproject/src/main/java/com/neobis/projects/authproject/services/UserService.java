@@ -46,7 +46,19 @@ public class UserService implements UserDetailsService {
     @Transactional
     public void setUserStatus(User user, UserStatus userStatus) {
         User userToBeUpdated = userRepository.findUserByUsername(user.getUsername()).get();
-        userToBeUpdated.setUserStatus(userStatus);
+        userToBeUpdated.setIsFirstTime(userStatus);
         userRepository.save(userToBeUpdated);
+    }
+
+    @Transactional
+    public void logoutUser(String username) {
+        User user = userRepository.findUserByUsername(username).get();
+        user.setLoggedIn(false);
+    }
+
+    @Transactional
+    public void loginUser(String username) {
+        User user = userRepository.findUserByUsername(username).get();
+        user.setLoggedIn(true);
     }
 }

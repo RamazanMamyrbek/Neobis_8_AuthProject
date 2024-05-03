@@ -30,6 +30,9 @@ public class User {
 
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "user_status")
-    private UserStatus userStatus;
+    @Column(name = "is_first_time")
+    private UserStatus isFirstTime;
+
+    @Column(name = "is_logged_in")
+    private boolean isLoggedIn;
 }

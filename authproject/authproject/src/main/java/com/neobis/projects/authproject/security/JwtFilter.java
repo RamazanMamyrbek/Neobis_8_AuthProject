@@ -2,7 +2,9 @@ package com.neobis.projects.authproject.security;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.neobis.projects.authproject.entities.User;
 import com.neobis.projects.authproject.services.UserService;
+import com.neobis.projects.authproject.utils.UserLoggedOutException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -38,6 +40,10 @@ public class JwtFilter extends OncePerRequestFilter {
                 try {
                     String username = jwtTokenUtils.validateAndExtractUsernameFromToken(token);
                     UserDetails userDetails = userService.loadUserByUsername(username);
+                    User currentUser = userService.findByUsername(username).get();
+                    if(!currentUser.isLoggedIn()) {
+                        throw new UserLoggedOutException("User is should login first");
+                    }
 
                     if(SecurityContextHolder.getContext().getAuthentication() == null) {
                         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
@@ -46,11 +52,11 @@ public class JwtFilter extends OncePerRequestFilter {
                                 userDetails.getAuthorities()));
                     }
                 } catch (JWTVerificationException ex) {
-//                    response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-//                            "Invalid JWT Token");
                     log.info("Invalid JWT TOKEN");
                 } catch (UsernameNotFoundException ex) {
                     log.info("Username not found");
+                } catch (UserLoggedOutException ex) {
+                    log.info(ex.getMessage());
                 }
             }
         }
