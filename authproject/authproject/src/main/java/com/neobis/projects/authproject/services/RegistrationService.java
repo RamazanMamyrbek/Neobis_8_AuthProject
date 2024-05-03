@@ -22,7 +22,8 @@ public class RegistrationService {
     public void registerUser(UserRegistrationDTO userRegistrationDTO) {
         User user = modelMapper.map(userRegistrationDTO, User.class);
         user.setPassword(passwordEncoder.encode(userRegistrationDTO.getPassword()));
-        user.setUserStatus(UserStatus.FIRST_TIME);
+        user.setIsFirstTime(UserStatus.FIRST_TIME);
+        user.setLoggedIn(true);
         userRepository.save(user);
     }
 }
