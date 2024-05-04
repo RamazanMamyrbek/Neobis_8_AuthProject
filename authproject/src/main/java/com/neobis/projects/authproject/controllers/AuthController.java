@@ -38,6 +38,7 @@ import java.util.Map;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 @Tag(name = "AuthController", description = "Controller for authentication/authorization")
+
 public class AuthController {
 
     private final UserService userService;

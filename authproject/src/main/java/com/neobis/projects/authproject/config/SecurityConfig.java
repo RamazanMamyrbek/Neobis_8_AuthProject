@@ -38,18 +38,19 @@ public class SecurityConfig {
                         .requestMatchers("/api/me", "/api/logout").authenticated()
                         .anyRequest().permitAll()
         );
+
+//        http.cors(httpSecurityCorsConfigurer ->
+//                httpSecurityCorsConfigurer.configurationSource(request -> {
+//                    CorsConfiguration configuration = new CorsConfiguration();
+//                    configuration.setAllowedOrigins(Collections.singletonList("http://localhost:3000"));
+//                    configuration.setAllowedHeaders(Collections.singletonList("*"));
+//                    configuration.setAllowedMethods(Collections.singletonList("*"));
+//                    configuration.setAllowCredentials(true);
+//                    configuration.setMaxAge(Duration.of(1L, ChronoUnit.HOURS));
+//                    return configuration;
+//                }));
+        http.cors(Customizer.withDefaults());
         http.csrf(csrf -> csrf.disable());
-        http.cors(httpSecurityCorsConfigurer ->
-                httpSecurityCorsConfigurer.configurationSource(request -> {
-                    CorsConfiguration configuration = new CorsConfiguration();
-                    configuration.setAllowedOrigins(Collections.singletonList("*"));
-                    configuration.setAllowedHeaders(Collections.singletonList("*"));
-                    configuration.setAllowedMethods(Collections.singletonList("*"));
-                    configuration.setAllowCredentials(true);
-                    configuration.setMaxAge(Duration.of(1L, ChronoUnit.HOURS));
-                    return configuration;
-                }));
-//        http.httpBasic(Customizer.withDefaults());
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.authenticationProvider(authenticationProvider());
         http.exceptionHandling(exception -> exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));
