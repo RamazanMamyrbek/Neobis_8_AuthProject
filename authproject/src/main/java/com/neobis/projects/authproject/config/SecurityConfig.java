@@ -17,6 +17,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -33,7 +39,16 @@ public class SecurityConfig {
                         .anyRequest().permitAll()
         );
         http.csrf(csrf -> csrf.disable());
-        http.cors(cors -> cors.disable());
+        http.cors(httpSecurityCorsConfigurer ->
+                httpSecurityCorsConfigurer.configurationSource(request -> {
+                    CorsConfiguration configuration = new CorsConfiguration();
+                    configuration.setAllowedOrigins(Collections.singletonList("*"));
+                    configuration.setAllowedHeaders(Collections.singletonList("*"));
+                    configuration.setAllowedMethods(Collections.singletonList("*"));
+                    configuration.setAllowCredentials(true);
+                    configuration.setMaxAge(Duration.of(1L, ChronoUnit.HOURS));
+                    return configuration;
+                }));
 //        http.httpBasic(Customizer.withDefaults());
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.authenticationProvider(authenticationProvider());
