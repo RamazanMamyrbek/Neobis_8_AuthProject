@@ -32,6 +32,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.cors(Customizer.withDefaults());
+        http.csrf(csrf -> csrf.disable());
         http.authorizeHttpRequests(
                 request -> request
                         .requestMatchers("/api/register", "/swagger-ui/**").permitAll()
@@ -49,8 +51,7 @@ public class SecurityConfig {
 //                    configuration.setMaxAge(Duration.of(1L, ChronoUnit.HOURS));
 //                    return configuration;
 //                }));
-        http.cors(Customizer.withDefaults());
-        http.csrf(csrf -> csrf.disable());
+
         http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.authenticationProvider(authenticationProvider());
         http.exceptionHandling(exception -> exception.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)));

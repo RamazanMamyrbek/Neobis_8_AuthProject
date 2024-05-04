@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,7 +39,7 @@ import java.util.Map;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 @Tag(name = "AuthController", description = "Controller for authentication/authorization")
-
+@Slf4j
 public class AuthController {
 
     private final UserService userService;
@@ -53,6 +54,7 @@ public class AuthController {
     @PostMapping("/register")
     @Operation(summary = "User registration", description = "Endpoint for user registration. Returns jwt token.")
     public ResponseEntity<?> register(@RequestBody UserRegistrationDTO userRegistrationDTO, BindingResult bindingResult) {
+        log.info("userRegDto: " + userRegistrationDTO.toString());
         userValidator.validate(modelMapper.map(userRegistrationDTO, User.class), bindingResult);
         if(bindingResult.hasErrors()) {
             List<FieldError> fieldErrors = bindingResult.getFieldErrors();

@@ -5,6 +5,7 @@ import com.neobis.projects.authproject.entities.User;
 import com.neobis.projects.authproject.entities.UserStatus;
 import com.neobis.projects.authproject.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
+@Slf4j
 public class RegistrationService {
     private final PasswordEncoder passwordEncoder;
     private final ModelMapper modelMapper;
@@ -24,6 +26,7 @@ public class RegistrationService {
         user.setPassword(passwordEncoder.encode(userRegistrationDTO.getPassword()));
         user.setIsFirstTime(UserStatus.FIRST_TIME);
         user.setLoggedIn(true);
+        log.info(user.toString());
         userRepository.save(user);
     }
 }
