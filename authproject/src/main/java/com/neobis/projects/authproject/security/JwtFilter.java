@@ -2,6 +2,7 @@ package com.neobis.projects.authproject.security;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.neobis.projects.authproject.dto.UserErrorResponse;
 import com.neobis.projects.authproject.entities.User;
 import com.neobis.projects.authproject.services.UserService;
 import com.neobis.projects.authproject.utils.UserLoggedOutException;
@@ -34,15 +35,24 @@ public class JwtFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
 
             if(token.isBlank()) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST,
-                        "Invalid JWT Token in Bearer Header");
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                response.getWriter().write("Jwt token is empty");
+                log.info("JWT Token is blank");
+                return;
             } else {
                 try {
                     String username = jwtTokenUtils.validateAndExtractUsernameFromToken(token);
                     UserDetails userDetails = userService.loadUserByUsername(username);
                     User currentUser = userService.findByUsername(username).get();
                     if(!currentUser.isLoggedIn()) {
-                        throw new UserLoggedOutException("User is should login first");
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write("User is should login first");
+                        return;
+                    }
+                    if(!currentUser.getEnabled()) {
+                        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                        response.getWriter().write("User should confirm email first");
+                        return;
                     }
 
                     if(SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -52,11 +62,20 @@ public class JwtFilter extends OncePerRequestFilter {
                                 userDetails.getAuthorities()));
                     }
                 } catch (JWTVerificationException ex) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("Invalid JWT token");
                     log.info("Invalid JWT TOKEN");
+                    return;
                 } catch (UsernameNotFoundException ex) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("Username not found");
                     log.info("Username not found");
+                    return;
                 } catch (UserLoggedOutException ex) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().write("User should login first");
                     log.info(ex.getMessage());
+                    return;
                 }
             }
         }

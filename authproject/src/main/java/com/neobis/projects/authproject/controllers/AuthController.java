@@ -1,6 +1,7 @@
 package com.neobis.projects.authproject.controllers;
 
 
+import com.neobis.projects.authproject.dto.EmailResendDTO;
 import com.neobis.projects.authproject.dto.UserErrorResponse;
 import com.neobis.projects.authproject.dto.UserLoginDTO;
 import com.neobis.projects.authproject.dto.UserRegistrationDTO;
@@ -9,6 +10,7 @@ import com.neobis.projects.authproject.entities.UserStatus;
 import com.neobis.projects.authproject.services.RegistrationService;
 import com.neobis.projects.authproject.services.UserService;
 import com.neobis.projects.authproject.security.JwtTokenUtils;
+import com.neobis.projects.authproject.utils.CustomException;
 import com.neobis.projects.authproject.utils.InvalidUsernameOrEmailException;
 import com.neobis.projects.authproject.utils.UserValidator;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,10 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -74,19 +73,25 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(summary = "User login", description = "Endpoint for user login. Returns jwt token.")
     public ResponseEntity<?> login(@RequestBody UserLoginDTO userLoginDTO) {
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userLoginDTO.getUsername(),
-                userLoginDTO.getPassword());
-        try{
+        String token;
+        try {
+            UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userLoginDTO.getUsername(),
+                    userLoginDTO.getPassword());
             authenticationManager.authenticate(authentication);
-        }catch (BadCredentialsException ex) {
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            UserDetails userDetails = userService.loadUserByUsername(userLoginDTO.getUsername());
+            if(!userDetails.isEnabled())
+                throw new CustomException("Email should be confirmed first");
+            userService.loginUser(userLoginDTO.getUsername());
+            token = jwtTokenUtils.generateToken(userDetails);
+        } catch (BadCredentialsException ex) {
             return new ResponseEntity<>(new UserErrorResponse("Invalid username or password", System.currentTimeMillis()), HttpStatus.BAD_REQUEST);
+        }catch (DisabledException ex) {
+            return new ResponseEntity<>(new UserErrorResponse("User account is disabled and should confirm email first", System.currentTimeMillis()), HttpStatus.BAD_REQUEST);
         }
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        UserDetails userDetails = userService.loadUserByUsername(userLoginDTO.getUsername());
-        userService.loginUser(userLoginDTO.getUsername());
-        String token = jwtTokenUtils.generateToken(userDetails);
-
-
+        catch (CustomException ex) {
+            return new ResponseEntity<>(new UserErrorResponse(ex.getMessage(), System.currentTimeMillis()), HttpStatus.BAD_REQUEST);
+        }
         return new ResponseEntity<>(Map.of("accessToken", token), HttpStatus.OK);
     }
 
@@ -116,6 +121,24 @@ public class AuthController {
         return new ResponseEntity<>(Map.of("message", String.format("User %s is logged out", principal.getName())), HttpStatus.OK);
     }
 
+    //Endpoint for email confirmation
+    @GetMapping("/register/confirm")
+    @Operation(summary = "Email confirmation", description = "Endpoint for activate account with email confirmation token.")
+    public String confirmEmail(@RequestParam(name = "confirmToken", required = true) String confirmToken) {
+        registrationService.activateAccount(confirmToken);
+        return "Email confirmed. Please login.";
+    }
+
+    // Endpooint for confirmation token resending
+    @PostMapping("/register/resendConfirmationToken")
+    @Operation(summary = "Confirmation token resend", description = "Confirmation token resend")
+    public ResponseEntity<?> resendConfirmToken(@RequestBody EmailResendDTO emailResendDTO) {
+        registrationService.sendEmail(emailResendDTO.getEmail());
+        return new ResponseEntity<>(Map.of("message", "Token resent"), HttpStatus.OK);
+    }
+
+
+
     @ExceptionHandler
     public ResponseEntity<?> invalidUsernameOrEmailExceptionHandler(InvalidUsernameOrEmailException ex) {
         UserErrorResponse userErrorResponse = new UserErrorResponse(ex.getMessage(), System.currentTimeMillis());
@@ -126,5 +149,11 @@ public class AuthController {
     public ResponseEntity<?> usernameNotFoundExceptionHandler(UsernameNotFoundException ex) {
         UserErrorResponse userErrorResponse = new UserErrorResponse(ex.getMessage(), System.currentTimeMillis());
         return new ResponseEntity<>(userErrorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<?> RuntimeExceptionHandler(CustomException ex) {
+        UserErrorResponse userErrorResponse = new UserErrorResponse(ex.getMessage(), System.currentTimeMillis());
+        return new ResponseEntity<>(userErrorResponse, HttpStatus.BAD_REQUEST);
     }
 }

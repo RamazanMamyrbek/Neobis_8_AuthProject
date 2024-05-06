@@ -5,6 +5,7 @@ import com.neobis.projects.authproject.entities.MyUserDetails;
 import com.neobis.projects.authproject.entities.User;
 import com.neobis.projects.authproject.entities.UserStatus;
 import com.neobis.projects.authproject.repositories.UserRepository;
+import com.neobis.projects.authproject.utils.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;

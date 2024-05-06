@@ -27,3 +27,5 @@ services:
       JWT_LIFETIME: 30m
     depends_on:
       - postgres_db
+
+
