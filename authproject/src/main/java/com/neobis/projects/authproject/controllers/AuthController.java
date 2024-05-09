@@ -126,7 +126,7 @@ public class AuthController {
     @Operation(summary = "Email confirmation", description = "Endpoint for activate account with email confirmation token.")
     public String confirmEmail(@RequestParam(name = "confirmToken", required = true) String confirmToken) {
         registrationService.activateAccount(confirmToken);
-        return "Email confirmed. Please login.";
+        return "Email подтвержден. Чтобы продолжить, вам необходимо вернуться на предыдущую страницу и нажать кнопку \"Назад\", после чего выполнить вход, введя свои учетные данные (имя пользователя и пароль).";
     }
 
     // Endpooint for confirmation token resending
