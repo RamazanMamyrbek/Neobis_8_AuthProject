@@ -29,7 +29,7 @@ public class RegistrationService {
     private final ConfirmationTokenService confirmationTokenService;
     private final EmailSenderService emailSenderService;
 
-    private String link = "https://165.227.147.154:8081/api/register/confirm?confirmToken=";
+    private String link = "http://165.227.147.154:8081/api/register/confirm?confirmToken=";
 
     @Transactional
     public void registerUser(UserRegistrationDTO userRegistrationDTO) {
